@@ -1,5 +1,5 @@
 # hyph_hr_HR
 
-Kruno
+Kruno (2026)
 
 LGPL
