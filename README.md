@@ -1,6 +1,6 @@
 # Pravila za rastavljanje riječi hrvatskoga jezika
 
-# hyph-hr: Generator pravila za automatsku hifenaciju hrvatskog jezika
+**hyph-hr: Generator pravila za automatsku hifenaciju hrvatskog jezika**
 
 Ovaj projekt sadrži alate i pravila za automatsko rastavljanje riječi na kraju retka (hifenaciju) u hrvatskom jeziku, u potpunosti optimizirana za formate koje koriste popularni programi poput **LibreOffice**, **Firefox**, **Adobe InDesign** (putem Hunspell/libhyphen sustava) i **TeX**.
 
