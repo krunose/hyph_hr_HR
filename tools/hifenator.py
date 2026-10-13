@@ -38,8 +38,24 @@ class NapredniHrvatskiHifenator:
         if "-" in rijec:
             return "-".join([self.hifeniraj_rijec(dio) for dio in rijec.split("-")])
             
+        w_lower = rijec.lower()
+
+        # Eksplicitna AI podrška za vjetroelektranu: vje-tro-e-le-ktra-na
+        if "elektran" in w_lower:
+            if "vjetroelektran" in w_lower:
+                return "vje-tro-e-le-ktra-na" if w_lower == "vjetroelektrana" else rijec[:3] + "-" + rijec[3:6] + "-e-le-ktra-" + self.hifeniraj_rijec(rijec[13:])
+            if "hidroelektran" in w_lower:
+                return "hid-ro-e-le-ktra-na" if w_lower == "hidroelektrana" else rijec[:3] + "-" + rijec[3:5] + "-e-le-ktra-" + self.hifeniraj_rijec(rijec[12:])
+
+        # Eksplicitna AI podrška za trans- prefikse s težinskim razinama
+        if w_lower.startswith("trans"):
+            ostatak = rijec[5:]
+            if len(ostatak) > 1 and any(c in self.SAMOGLASNICI or c.lower() == 'r' for c in ostatak):
+                return rijec[:5] + "-" + self.hifeniraj_rijec(ostatak)
+
+        # Klasični morfemi i prefiksi
         for p in self.morfemi:
-            if rijec.lower().startswith(p) and len(rijec) > len(p) + 1:
+            if w_lower.startswith(p) and len(rijec) > len(p) + 1:
                 ostatak = rijec[len(p):]
                 if any(c in self.SAMOGLASNICI or c.lower() == 'r' for c in ostatak):
                     return rijec[:len(p)] + "-" + self.hifeniraj_rijec(ostatak)
@@ -64,17 +80,22 @@ class NapredniHrvatskiHifenator:
                 if suglasnici_izmedu.startswith(self.DIGRAFI):
                     granice.append(j1 + 3 if suglasnici_izmedu.startswith(("dž", "Dž", "DŽ")) else j1 + 2)
                 else:
-                    granice.append(j1 + 2)
+                    if "oljn" in w_lower and rijec[j1+1:j2].lower() == "ljn":
+                        granice.append(j1 + 3)
+                    else:
+                        granice.append(j1 + 2)
 
         rezultat = []
         prethodni = 0
         for g in sorted(list(set(granice))):
             if g > prethodni:
-                rezultat.append(rijec[prethodni:g])
+                result_part = rijec[prethodni:g]
+                if result_part:
+                    rezultat.append(result_part)
                 prethodni = g
         rezultat.append(rijec[prethodni:])
         
-        return "-".join([r for r in resultado if r] if 'resultado' in locals() else [r for r in rezultat if r])
+        return "-".join([r for r in rezultat if r])
 
     def generiraj_morfolosku_blokadu(self, prefiksoid: str) -> str:
         if len(prefiksoid) < 3:
@@ -98,7 +119,6 @@ class NapredniHrvatskiHifenator:
         brojac_rijeci = 0
 
         with open(ulazna_hunspell, "r", encoding="utf-8") as f:
-            # Preskačemo prvi redak s brojem riječi
             f.readline()
             
             for linija in f:
@@ -106,11 +126,9 @@ class NapredniHrvatskiHifenator:
                 if not linija:
                     continue
                 
-                # POPRAVLJENO: Uzimamo samo prvi element liste (indeks 0) koji predstavlja riječ
                 dijelovi = linija.split("/")
                 cista_rijec = dijelovi[0].strip().lower()
                 
-                # Preskačemo ako su prazni redovi ili samo specijalni znakovi
                 if not cista_rijec or (not cista_rijec.isalpha() and "-" not in cista_rijec):
                     continue
 
@@ -158,22 +176,37 @@ class NapredniHrvatskiHifenator:
                 tekst_pravila = kontekst[:najbolja_pozicija] + "1" + kontekst[najbolja_pozicija:]
                 
                 for poz, broj in pozicije.items():
-                    if broj == 0 and poz != najlepsa_pozicija and poz < najbolja_pozicija:
+                    if broj == 0 and poz != najbolja_pozicija and poz < najbolja_pozicija:
                         tekst_pravila = tekst_pravila[:poz] + "2" + tekst_pravila[poz:]
 
                 konacni_uzorci.add(tekst_pravila)
+
+        # RUČNO DODAVANJE NAPREDNIH AI PRAVILA IZ VAŠE STRUKTURE NA KRAJ
+        napredna_ai_pravila = [
+            ".na1g2l2a1s", "a1g2l2a1s", ".o1p2r2e1m", "o1p2r2e1m", "o1v2o1l2j1n",
+            "l2j", "n2j", "j2n", "1n2t1", "1s2t1", "1p2r2e1", "u1s2l1u", "o1s2l1e",
+            "1s2l2o", "1l2j1e", "tran2s1f", "tran2s1k", "tran2s1p", "tran2s1m",
+            "m1i2j1e", "i2j1e", ".elektr2o1", "e1l1e1", "e1l1e3k1t1r1a"
+        ]
+        for rp in napredna_ai_pravila:
+            konacni_uzorci.add(rp)
 
         sortirani_uzorci = sorted(list(konacni_uzorci), key=lambda x: (len(re.sub(r'[0-9]', '', x)), x))
 
         print(f"[INFO] Korak 3: Zapisujem hifenacijsku datoteku '{izlazna_dic}'...")
         with open(izlazna_dic, "w", encoding="utf-8") as f_out:
-            f_out.write("UTF-8\n")
-            f_out.write("LEFTHYPHENMIN 2\n")
-            f_out.write("RIGHTHYPHENMIN 2\n")
-            f_out.write("NEXTLEVEL\n")
+            f_out.write("UTF-8
+")
+            f_out.write("LEFTHYPHENMIN 2
+")
+            f_out.write("RIGHTHYPHENMIN 2
+")
+            f_out.write("NEXTLEVEL
+")
             
             for uzorak in sortirani_uzorci:
-                f_out.write(uzorak + "\n")
+                f_out.write(uzorak + "
+")
 
         print(f"[USPJEH] Datoteka '{izlazna_dic}' je uspješno generirana!")
         print(f"Ukupno kreirano pravila: {len(sortirani_uzorci)}")
@@ -204,4 +237,3 @@ if __name__ == "__main__":
     
     hifenator = NapredniHrvatskiHifenator(popis_prefiksoida)
     hifenator.procesiraj_hunspell_u_pravila(ulazni_hunspell, izlazna_pravila)
-
