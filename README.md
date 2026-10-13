@@ -8,7 +8,7 @@ Ovaj projekt sadrži alate i pravila za automatsko rastavljanje riječi na kraju
 
 Ovaj repozitorij nastao je kao spoj jezične baze, algoritamske analize i suvremene tehnologije:
 1. **Izvorna baza podataka (Rječnik):** Kao osnova za učenje i ekstrakciju jezičnih zakonitosti poslužio je hrvatski Hunspell rječnik s repozitorija [github.com/krunose/hunspell-hr](https://github.com).
-2. **Razvoj algoritma (AI):** Python skripta `hifenator.py` razvijena je u suradnji s **umjetnom inteligencijom (AI)**. Cilj je bio stvoriti hibridni model koji kombinira stroga morfološka pravila hrvatskog standardnog jezika s naprednom statističkom analizom (n-gram extraction) kako bi se zamijenio tradicionalni, komplicirani TeX-ov `patgen` proces.
+2. **Razvoj algoritma (AI):** Python skripta `hifenator.py` razvijena je u suradnji s **umjetnom inteligencijom**. Cilj je bio stvoriti hibridni model koji kombinira stroga morfološka pravila hrvatskog standardnog jezika s naprednom statističkom analizom (n-gram extraction) kako bi se zamijenio tradicionalni, komplicirani TeX-ov `patgen` proces.
 
 ---
 
@@ -16,17 +16,18 @@ Ovaj repozitorij nastao je kao spoj jezične baze, algoritamske analize i suvrem
 
 Generiranje datoteke s pravilima (`hyph_hr_HR.dic`) odvija se kroz tri ključna koraka unutar skripte:
 
-1. **Čišćenje Hunspell baze:** Skripta u letu čita izvornu datoteku `hr_HR.dic`, preskače metapodatke i automatski uklanja sve Hunspell numeričke i morfemske zastavice (npr. transformira `riječ/21` ili `riječ/353` u čisti tekst `riječ`).
+1. **Čitanje Hunspell baze:** Skripta u letu čita izvornu datoteku `hr_HR.dic`, preskače metapodatke i automatski uklanja sve Hunspell numeričke i morfemske zastavice (npr. transformira `riječ/21` ili `riječ/353` u čisti tekst `riječ`).
 2. **Hibridna hifenacija (Jezični modul):** 
    - **Morfemska granica (Prioritet):** Riječi se prvo provjeravaju kroz masovnu bazu hrvatskih prefiksa (`raz-`, `nad-`, `pod-`, `bez-`...) i opsežan popis od preko 150 prefiksoida (`auto-`, `pseudo-`, `tele-`, `cyber-`...). Time se sprječava računalni kaos poput pogrešnih lomova `pseu-doznanost` ili `ra-zuvjeriti`.
    - **Fonološki prijelom:** Nad čistim ostatkom riječi primjenjuju se standardna fonološka pravila (poput prijeloma unutar suglasničkih skupina VC-CV, obrade digrafa `lj`, `nj`, `dž` kao jedinstvenih glasova te prepoznavanja slogotvornog `r`).
 3. **Statističko sažimanje (Generiranje TeX obrazaca):** Skripta analizira stvorene crtice kroz n-grame (okruženja od 3 do 6 slova). Ako se određeni prijelom u bazi od milijun oblika riječi ponavlja s točnošću većom od **95%**, skripta ga pretvara u TeX uzorak. Istovremeno se automatski ubrizgavaju **blokade (parni brojevi, npr. 2)** unutar prefiksoida kako opća pravila o zijatu (hiatu) ne bi razbila njihovu unutrašnjost.
+4. **Testiranje pravila i dodavanje iznimaka:** Iako su automatski generirana pravila dovoljno dobra, postoje iznimke koje se ne rastavljaju na poželjnim mjestima. Ručnim testiranjem iznimke se dodaju na kraj datoteke.
 
 ---
 
 ## Kako pokrenuti skriptu?
 
-Sve što treba je instaliran Python 3 i datoteka s rječnikom smještena i istoj mapi.
+Sve što treba je instaliran Python3 i datoteka s rječnikom smještena i istoj mapi.
 
 1. Osiguraj da ti se izvorna datoteka u mapi zove **`hr_HR.dic`** (ili prilagodi nazive na dnu skripte).
 2. Pokreni skriptu kroz terminal / command prompt:
